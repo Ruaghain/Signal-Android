@@ -69,6 +69,7 @@ import org.thoughtcrime.securesms.database.NoExternalStorageException;
 import org.thoughtcrime.securesms.jobs.DirectoryRefreshJob;
 import org.thoughtcrime.securesms.jobs.GcmRefreshJob;
 import org.thoughtcrime.securesms.lock.RegistrationLockReminders;
+import org.thoughtcrime.securesms.notifications.NotificationChannels;
 import org.thoughtcrime.securesms.permissions.Permissions;
 import org.thoughtcrime.securesms.push.AccountManagerFactory;
 import org.thoughtcrime.securesms.service.DirectoryRefreshListener;
@@ -365,9 +366,9 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
           restoreButton.setIndeterminateProgressMode(true);
           restoreButton.setProgress(50);
 
-          new AsyncTask<Void, Void, Boolean>() {
+          new AsyncTask<Void, Void, BackupImportResult>() {
             @Override
-            protected Boolean doInBackground(Void... voids) {
+            protected BackupImportResult doInBackground(Void... voids) {
               try {
                 Context        context    = RegistrationActivity.this;
                 String         passphrase = prompt.getText().toString();
@@ -378,26 +379,36 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
                                               database, backup.getFile(), passphrase);
 
                 DatabaseFactory.upgradeRestored(context, database);
+                NotificationChannels.restoreContactNotificationChannels(context);
 
                 TextSecurePreferences.setBackupEnabled(context, true);
                 TextSecurePreferences.setBackupPassphrase(context, passphrase);
-                return true;
+                return BackupImportResult.SUCCESS;
+              } catch (FullBackupImporter.DatabaseDowngradeException e) {
+                Log.w(TAG, "Failed due to the backup being from a newer version of Signal.", e);
+                return BackupImportResult.FAILURE_VERSION_DOWNGRADE;
               } catch (IOException e) {
                 Log.w(TAG, e);
-                return false;
+                return BackupImportResult.FAILURE_UNKNOWN;
               }
             }
 
             @Override
-            protected void onPostExecute(@NonNull Boolean result) {
+            protected void onPostExecute(@NonNull BackupImportResult result) {
               restoreButton.setIndeterminateProgressMode(false);
               restoreButton.setProgress(0);
               restoreBackupProgress.setText("");
 
-              if (result) {
-                displayInitialView(true);
-              } else {
-                Toast.makeText(RegistrationActivity.this, R.string.RegistrationActivity_incorrect_backup_passphrase, Toast.LENGTH_LONG).show();
+              switch (result) {
+                case SUCCESS:
+                  displayInitialView(true);
+                  break;
+                case FAILURE_VERSION_DOWNGRADE:
+                  Toast.makeText(RegistrationActivity.this, R.string.RegistrationActivity_backup_failure_downgrade, Toast.LENGTH_LONG).show();
+                  break;
+                case FAILURE_UNKNOWN:
+                  Toast.makeText(RegistrationActivity.this, R.string.RegistrationActivity_incorrect_backup_passphrase, Toast.LENGTH_LONG).show();
+                  break;
               }
             }
           }.execute();
@@ -487,8 +498,6 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
           return new Pair<>(password, gcmToken);
         } catch (IOException e) {
           Log.w(TAG, "Error during account registration", e);
-          createButton.setIndeterminateProgressMode(false);
-          createButton.setProgress(0);
           return null;
         }
       }
@@ -496,6 +505,8 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
       protected void onPostExecute(@Nullable Pair<String, Optional<String>> result) {
         if (result == null) {
           Toast.makeText(RegistrationActivity.this, R.string.RegistrationActivity_unable_to_connect_to_service, Toast.LENGTH_LONG).show();
+          createButton.setIndeterminateProgressMode(false);
+          createButton.setProgress(0);
           return;
         }
 
@@ -1112,5 +1123,9 @@ public class RegistrationActivity extends BaseActionBarActivity implements Verif
       this.password   = previous.password;
       this.gcmToken   = previous.gcmToken;
     }
+  }
+
+  private enum BackupImportResult {
+    SUCCESS, FAILURE_VERSION_DOWNGRADE, FAILURE_UNKNOWN
   }
 }
