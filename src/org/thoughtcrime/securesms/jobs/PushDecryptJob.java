@@ -7,6 +7,8 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+
+import org.thoughtcrime.securesms.jobmanager.SafeData;
 import org.thoughtcrime.securesms.logging.Log;
 import android.util.Pair;
 
@@ -98,7 +100,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+
+import androidx.work.Data;
 
 public class PushDecryptJob extends ContextJob {
 
@@ -106,8 +109,15 @@ public class PushDecryptJob extends ContextJob {
 
   public static final String TAG = PushDecryptJob.class.getSimpleName();
 
-  private final long messageId;
-  private final long smsMessageId;
+  private static final String KEY_MESSAGE_ID     = "message_id";
+  private static final String KEY_SMS_MESSAGE_ID = "sms_message_id";
+
+  private long messageId;
+  private long smsMessageId;
+
+  public PushDecryptJob() {
+    super(null, null);
+  }
 
   public PushDecryptJob(Context context, long pushMessageId) {
     this(context, pushMessageId, -1);
@@ -115,16 +125,24 @@ public class PushDecryptJob extends ContextJob {
 
   public PushDecryptJob(Context context, long pushMessageId, long smsMessageId) {
     super(context, JobParameters.newBuilder()
-                                .withPersistence()
                                 .withGroupId("__PUSH_DECRYPT_JOB__")
-                                .withWakeLock(true, 5, TimeUnit.SECONDS)
                                 .create());
     this.messageId    = pushMessageId;
     this.smsMessageId = smsMessageId;
   }
 
   @Override
-  public void onAdded() {}
+  protected void initialize(@NonNull SafeData data) {
+    messageId    = data.getLong(KEY_MESSAGE_ID);
+    smsMessageId = data.getLong(KEY_SMS_MESSAGE_ID);
+  }
+
+  @Override
+  protected @NonNull Data serialize(@NonNull Data.Builder dataBuilder) {
+    return dataBuilder.putLong(KEY_MESSAGE_ID, messageId)
+                      .putLong(KEY_SMS_MESSAGE_ID, smsMessageId)
+                      .build();
+  }
 
   @Override
   public void onRun() throws NoSuchMessageException {
@@ -174,6 +192,11 @@ public class PushDecryptJob extends ContextJob {
       SignalServiceCipher  cipher        = new SignalServiceCipher(localAddress, axolotlStore);
 
       SignalServiceContent content = cipher.decrypt(envelope);
+
+      if (shouldIgnore(envelope, content)) {
+        Log.i(TAG, "Ignoring message.");
+        return;
+      }
 
       if (content.getDataMessage().isPresent()) {
         SignalServiceDataMessage message        = content.getDataMessage().get();
@@ -940,5 +963,41 @@ public class PushDecryptJob extends ContextJob {
     } else {
       return Recipient.from(context, Address.fromExternal(context, envelope.getSource()), false);
     }
+  }
+
+  private boolean shouldIgnore(@NonNull SignalServiceEnvelope envelope, @NonNull SignalServiceContent content) {
+    Recipient sender = Recipient.from(context, Address.fromExternal(context, envelope.getSource()), false);
+
+    if (content.getDataMessage().isPresent()) {
+      SignalServiceDataMessage message      = content.getDataMessage().get();
+      Recipient                conversation = getMessageDestination(envelope, message);
+
+      if (conversation.isGroupRecipient() && conversation.isBlocked()) {
+        return true;
+      } else if (conversation.isGroupRecipient()) {
+        GroupDatabase    groupDatabase = DatabaseFactory.getGroupDatabase(context);
+        Optional<String> groupId       = message.getGroupInfo().isPresent() ? Optional.of(GroupUtil.getEncodedId(message.getGroupInfo().get().getGroupId(), false))
+                                                                            : Optional.absent();
+
+        if (groupId.isPresent() && groupDatabase.isUnknownGroup(groupId.get())) {
+          return false;
+        }
+
+        boolean isTextMessage    = message.getBody().isPresent();
+        boolean isMediaMessage   = message.getAttachments().isPresent() || message.getQuote().isPresent() || message.getSharedContacts().isPresent();
+        boolean isExpireMessage  = message.isExpirationUpdate();
+        boolean isContentMessage = !message.isGroupUpdate() && (isTextMessage || isMediaMessage || isExpireMessage);
+        boolean isGroupActive    = groupId.isPresent() && groupDatabase.isActive(groupId.get());
+        boolean isLeaveMessage   = message.getGroupInfo().isPresent() && message.getGroupInfo().get().getType() == SignalServiceGroup.Type.QUIT;
+
+        return (isContentMessage && !isGroupActive) || (sender.isBlocked() && !isLeaveMessage);
+      } else {
+        return sender.isBlocked();
+      }
+    } else if (content.getCallMessage().isPresent()) {
+      return sender.isBlocked();
+    }
+
+    return false;
   }
 }

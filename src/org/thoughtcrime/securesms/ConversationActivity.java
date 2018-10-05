@@ -51,6 +51,9 @@ import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+
+import org.thoughtcrime.securesms.camera.CameraActivity;
+import org.thoughtcrime.securesms.database.GroupDatabase;
 import org.thoughtcrime.securesms.logging.Log;
 import android.util.Pair;
 import android.view.KeyEvent;
@@ -70,7 +73,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.places.ui.PlacePicker;
-import com.google.protobuf.ByteString;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -132,6 +134,7 @@ import org.thoughtcrime.securesms.mms.AttachmentManager.MediaType;
 import org.thoughtcrime.securesms.mms.AudioSlide;
 import org.thoughtcrime.securesms.mms.GlideApp;
 import org.thoughtcrime.securesms.mms.GlideRequests;
+import org.thoughtcrime.securesms.mms.ImageSlide;
 import org.thoughtcrime.securesms.mms.LocationSlide;
 import org.thoughtcrime.securesms.mms.MediaConstraints;
 import org.thoughtcrime.securesms.mms.OutgoingExpirationUpdateMessage;
@@ -192,7 +195,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.thoughtcrime.securesms.TransportOption.Type;
 import static org.thoughtcrime.securesms.database.GroupDatabase.GroupRecord;
 import static org.whispersystems.libsignal.SessionCipher.SESSION_LOCK;
-import static org.whispersystems.signalservice.internal.push.SignalServiceProtos.GroupContext;
 
 /**
  * Activity for displaying a message thread, as well as
@@ -233,6 +235,8 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   private static final int PICK_LOCATION       = 9;
   private static final int PICK_GIF            = 10;
   private static final int SMS_DEFAULT         = 11;
+  private static final int PICK_CAMERA         = 12;
+  private static final int EDIT_IMAGE          = 13;
 
   private   GlideRequests               glideRequests;
   protected ComposeText                 composeText;
@@ -495,6 +499,27 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     case SMS_DEFAULT:
       initializeSecurity(isSecureText, isDefaultSms);
       break;
+    case PICK_CAMERA:
+      int             imageWidth     = data.getIntExtra(CameraActivity.EXTRA_WIDTH, 0);
+      int             imageHeight    = data.getIntExtra(CameraActivity.EXTRA_HEIGHT, 0);
+      long            imageSize      = data.getLongExtra(CameraActivity.EXTRA_SIZE, 0);
+      TransportOption transport      = data.getParcelableExtra(CameraActivity.EXTRA_TRANSPORT);
+      String          message        = data.getStringExtra(CameraActivity.EXTRA_MESSAGE);
+      SlideDeck       slideDeck      = new SlideDeck();
+      long            expiresIn      = recipient.getExpireMessages() * 1000L;
+      int             subscriptionId = sendButton.getSelectedTransport().getSimSubscriptionId().or(-1);
+      boolean         initiating     = threadId == -1;
+
+      if (transport == null) {
+        throw new IllegalStateException("Received a null transport from the CameraActivity.");
+      }
+
+      sendButton.setTransport(transport);
+
+      slideDeck.addSlide(new ImageSlide(this, data.getData(), imageSize, imageWidth, imageHeight));
+
+      sendMediaMessage(transport.isSms(), message, slideDeck, Collections.emptyList(), expiresIn, subscriptionId, initiating);
+      break;
     }
   }
 
@@ -573,8 +598,8 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   public boolean onOptionsItemSelected(MenuItem item) {
     super.onOptionsItemSelected(item);
     switch (item.getItemId()) {
-    case R.id.menu_call_secure:
-    case R.id.menu_call_insecure:             handleDial(getRecipient());                        return true;
+    case R.id.menu_call_secure:               handleDial(getRecipient(), true);                  return true;
+    case R.id.menu_call_insecure:             handleDial(getRecipient(), false);                 return true;
     case R.id.menu_view_media:                handleViewMedia();                                 return true;
     case R.id.menu_add_shortcut:              handleAddShortcut();                               return true;
     case R.id.menu_add_to_contacts:           handleAddToContacts();                             return true;
@@ -693,26 +718,34 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   }
 
   private void handleUnblock() {
+    int titleRes = R.string.ConversationActivity_unblock_this_contact_question;
+    int bodyRes  = R.string.ConversationActivity_you_will_once_again_be_able_to_receive_messages_and_calls_from_this_contact;
+
+    if (recipient.isGroupRecipient()) {
+      titleRes = R.string.ConversationActivity_unblock_this_group_question;
+      bodyRes  = R.string.ConversationActivity_unblock_this_group_description;
+    }
+
     //noinspection CodeBlock2Expr
     new AlertDialog.Builder(this)
-        .setTitle(R.string.ConversationActivity_unblock_this_contact_question)
-        .setMessage(R.string.ConversationActivity_you_will_once_again_be_able_to_receive_messages_and_calls_from_this_contact)
-        .setNegativeButton(android.R.string.cancel, null)
-        .setPositiveButton(R.string.ConversationActivity_unblock, (dialog, which) -> {
-          new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-              DatabaseFactory.getRecipientDatabase(ConversationActivity.this)
+                   .setTitle(titleRes)
+                   .setMessage(bodyRes)
+                   .setNegativeButton(android.R.string.cancel, null)
+                   .setPositiveButton(R.string.ConversationActivity_unblock, (dialog, which) -> {
+                     new AsyncTask<Void, Void, Void>() {
+                       @Override
+                       protected Void doInBackground(Void... params) {
+                         DatabaseFactory.getRecipientDatabase(ConversationActivity.this)
                              .setBlocked(recipient, false);
 
-              ApplicationContext.getInstance(ConversationActivity.this)
-                                .getJobManager()
-                                .add(new MultiDeviceBlockedUpdateJob(ConversationActivity.this));
+                         ApplicationContext.getInstance(ConversationActivity.this)
+                             .getJobManager()
+                             .add(new MultiDeviceBlockedUpdateJob(ConversationActivity.this));
 
-              return null;
-            }
-          }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }).show();
+                         return null;
+                       }
+                     }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                   }).show();
   }
 
   @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -847,24 +880,21 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     builder.setCancelable(true);
     builder.setMessage(getString(R.string.ConversationActivity_are_you_sure_you_want_to_leave_this_group));
     builder.setPositiveButton(R.string.yes, (dialog, which) -> {
-      Context self = ConversationActivity.this;
+      Recipient                           groupRecipient = getRecipient();
+      long                                threadId       = DatabaseFactory.getThreadDatabase(this).getThreadIdFor(groupRecipient);
+      Optional<OutgoingGroupMediaMessage> leaveMessage   = GroupUtil.createGroupLeaveMessage(this, groupRecipient);
 
-      try {
-        String groupId = getRecipient().getAddress().toGroupString();
-        DatabaseFactory.getGroupDatabase(self).setActive(groupId, false);
+      if (threadId != -1 && leaveMessage.isPresent()) {
+        MessageSender.send(this, leaveMessage.get(), threadId, false, null);
 
-        GroupContext context = GroupContext.newBuilder()
-                                           .setId(ByteString.copyFrom(GroupUtil.getDecodedId(groupId)))
-                                           .setType(GroupContext.Type.QUIT)
-                                           .build();
+        GroupDatabase groupDatabase = DatabaseFactory.getGroupDatabase(this);
+        String        groupId       = groupRecipient.getAddress().toGroupString();
+        groupDatabase.setActive(groupId, false);
+        groupDatabase.remove(groupId, Address.fromSerialized(TextSecurePreferences.getLocalNumber(this)));
 
-        OutgoingGroupMediaMessage outgoingMessage = new OutgoingGroupMediaMessage(getRecipient(), context, null, System.currentTimeMillis(), 0, null, Collections.emptyList());
-        MessageSender.send(self, outgoingMessage, threadId, false, null);
-        DatabaseFactory.getGroupDatabase(self).remove(groupId, Address.fromSerialized(TextSecurePreferences.getLocalNumber(self)));
         initializeEnabledCheck();
-      } catch (IOException e) {
-        Log.w(TAG, e);
-        Toast.makeText(self, R.string.ConversationActivity_error_leaving_group, Toast.LENGTH_LONG).show();
+      } else {
+        Toast.makeText(this, R.string.ConversationActivity_error_leaving_group, Toast.LENGTH_LONG).show();
       }
     });
 
@@ -910,10 +940,10 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
     }
   }
 
-  private void handleDial(final Recipient recipient) {
+  private void handleDial(final Recipient recipient, boolean isSecure) {
     if (recipient == null) return;
 
-    if (isSecureText) {
+    if (isSecure) {
       CommunicationActions.startVoiceCall(this, recipient);
     } else {
       try {
@@ -2099,21 +2129,18 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
   private class QuickCameraToggleListener implements OnClickListener {
     @Override
     public void onClick(View v) {
-      if (!quickAttachmentDrawer.isShowing()) {
-        Permissions.with(ConversationActivity.this)
-                   .request(Manifest.permission.CAMERA)
-                   .ifNecessary()
-                   .withRationaleDialog(getString(R.string.ConversationActivity_to_capture_photos_and_video_allow_signal_access_to_the_camera), R.drawable.ic_photo_camera_white_48dp)
-                   .withPermanentDenialDialog(getString(R.string.ConversationActivity_signal_needs_the_camera_permission_to_take_photos_or_video))
-                   .onAllGranted(() -> {
-                     composeText.clearFocus();
-                     container.show(composeText, quickAttachmentDrawer);
-                   })
-                   .onAnyDenied(() -> Toast.makeText(ConversationActivity.this, R.string.ConversationActivity_signal_needs_camera_permissions_to_take_photos_or_video, Toast.LENGTH_LONG).show())
-                   .execute();
-      } else {
-        container.hideAttachedInput(false);
-      }
+      Permissions.with(ConversationActivity.this)
+                 .request(Manifest.permission.CAMERA)
+                 .ifNecessary()
+                 .withRationaleDialog(getString(R.string.ConversationActivity_to_capture_photos_and_video_allow_signal_access_to_the_camera), R.drawable.ic_photo_camera_white_48dp)
+                 .withPermanentDenialDialog(getString(R.string.ConversationActivity_signal_needs_the_camera_permission_to_take_photos_or_video))
+                 .onAllGranted(() -> {
+                   composeText.clearFocus();
+                   startActivityForResult(CameraActivity.getIntent(ConversationActivity.this, sendButton.getSelectedTransport()), PICK_CAMERA);
+                   overridePendingTransition(R.anim.camera_slide_from_bottom, R.anim.stationary);
+                 })
+                 .onAnyDenied(() -> Toast.makeText(ConversationActivity.this, R.string.ConversationActivity_signal_needs_camera_permissions_to_take_photos_or_video, Toast.LENGTH_LONG).show())
+                 .execute();
     }
   }
 
@@ -2219,12 +2246,14 @@ public class ConversationActivity extends PassphraseRequiredActionBarActivity
       inputPanel.setQuote(GlideApp.with(this),
                           messageRecord.getDateSent(),
                           author,
+                          recipient,
                           body,
                           slideDeck);
     } else {
       inputPanel.setQuote(GlideApp.with(this),
                           messageRecord.getDateSent(),
                           author,
+                          recipient,
                           messageRecord.getBody(),
                           messageRecord.isMms() ? ((MmsMessageRecord) messageRecord).getSlideDeck() : new SlideDeck());
     }

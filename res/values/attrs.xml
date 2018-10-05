@@ -12,7 +12,9 @@
     <attr name="conversation_list_item_delivery_icon_color" format="reference|color"/>
     <attr name="conversation_list_item_date_color" format="reference|color"/>
     <attr name="conversation_list_item_unread_color" format="reference|color"/>
+    <attr name="conversation_list_item_unread_background" format="reference"/>
     <attr name="conversation_list_item_divider" format="reference"/>
+    <attr name="conversation_list_toolbar_background" format="reference"/>
 
     <attr name="conversation_sent_card_background" format="reference|color"/>
     <attr name="conversation_group_member_name" format="reference|color"/>
@@ -143,8 +145,8 @@
     <attr name="media_overview_toolbar_background" format="color"/>
     <attr name="media_overview_toolbar_foreground" format="color"/>
     <attr name="media_overview_header_foreground" format="color"/>
-    <attr name="media_overview_document_background" format="color"/>
-    <attr name="media_overview_document_foreground" format="color"/>
+    <attr name="media_overview_document_primary" format="color"/>
+    <attr name="media_overview_document_secondary" format="color"/>
 
     <attr name="shared_contact_details_header_background" format="color"/>
     <attr name="shared_contact_details_titlebar" format="color"/>
