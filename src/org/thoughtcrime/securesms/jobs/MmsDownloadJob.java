@@ -96,7 +96,7 @@ public class MmsDownloadJob extends MasterSecretJob {
 
   @Override
   public void onAdded() {
-    if (automatic && KeyCachingService.getMasterSecret(context) == null) {
+    if (automatic && KeyCachingService.isLocked(context)) {
       DatabaseFactory.getMmsDatabase(context).markIncomingNotificationReceived(threadId);
       MessageNotifier.updateNotification(context);
     }
@@ -252,7 +252,7 @@ public class MmsDownloadJob extends MasterSecretJob {
       group = Optional.of(Address.fromSerialized(DatabaseFactory.getGroupDatabase(context).getOrCreateGroupForMembers(new LinkedList<>(members), true)));
     }
 
-    IncomingMediaMessage   message      = new IncomingMediaMessage(from, group, body, retrieved.getDate() * 1000L, attachments, subscriptionId, 0, false);
+    IncomingMediaMessage   message      = new IncomingMediaMessage(from, group, body, retrieved.getDate() * 1000L, attachments, subscriptionId, 0, false, false);
     Optional<InsertResult> insertResult = database.insertMessageInbox(message, contentLocation, threadId);
 
     if (insertResult.isPresent()) {

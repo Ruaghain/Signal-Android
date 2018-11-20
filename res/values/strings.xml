@@ -86,6 +86,9 @@
     <string name="ClearProfileActivity_remove">Remove</string>
     <string name="ClearProfileActivity_remove_profile_photo">Remove profile photo?</string>
 
+    <!-- CommunicationActions -->
+    <string name="CommunicationActions_no_browser_found">No web browser found.</string>
+
     <!-- ConfirmIdentityDialog -->
     <string name="ConfirmIdentityDialog_your_safety_number_with_s_has_changed">Your safety number with %1$s has changed. This could either mean that someone is trying to intercept your communication, or that %2$s simply reinstalled Signal.</string>
     <string name="ConfirmIdentityDialog_you_may_wish_to_verify_your_safety_number_with_this_contact">You may wish to verify your safety number with this contact.</string>
@@ -310,6 +313,9 @@
     <string name="ExperienceUpgradeActivity_ready_for_your_closeup">Ready for your closeup?</string>
     <string name="ExperienceUpgradeActivity_now_you_can_share_a_profile_photo_and_name_with_friends_on_signal">Now you can share a profile photo and name with friends on Signal</string>
     <string name="ExperienceUpgradeActivity_signal_profiles_are_here">Signal profiles are here</string>
+
+    <!-- GcmBroadcastReceiver -->
+    <string name="GcmBroadcastReceiver_retrieving_a_message">Retrieving a message...</string>
 
     <!-- GcmRefreshJob -->
     <string name="GcmRefreshJob_Permanent_Signal_communication_failure">Permanent Signal communication failure!</string>
@@ -1201,6 +1207,12 @@
     <string name="preferences_chats__message_text_size">Message font size</string>
     <string name="preferences_events__contact_joined_signal">Contact joined Signal</string>
     <string name="preferences_notifications__priority">Priority</string>
+    <string name="preferences_communication__category_sealed_sender">Sealed Sender</string>
+    <string name="preferences_communication__sealed_sender_display_indicators">Display indicators</string>
+    <string name="preferences_communication__sealed_sender_display_indicators_description">Show a status icon when you select "Message details" on messages that were delivered using sealed sender.</string>
+    <string name="preferences_communication__sealed_sender_allow_from_anyone">Allow from anyone</string>
+    <string name="preferences_communication__sealed_sender_allow_from_anyone_description">Enable sealed sender for incoming messages from non-contacts and people with whom you have not shared your profile.</string>
+    <string name="preferences_communication__sealed_sender_learn_more">Learn more</string>
 
     <!-- **************************************** -->
     <!-- menus -->

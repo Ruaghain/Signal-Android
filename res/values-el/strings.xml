@@ -5,6 +5,7 @@
   <string name="no">Όχι</string>
   <string name="delete">Διαγραφή</string>
   <string name="please_wait">Παρακαλώ περίμενε...</string>
+  <string name="save">Αποθήκευση</string>
   <!--AbstractNotificationBuilder-->
   <string name="AbstractNotificationBuilder_new_message">Νέο μήνυμα</string>
   <!--ApplicationPreferencesActivity-->
@@ -67,9 +68,11 @@
   <string name="BucketedThreadMedia_This_month">Αυτό το μήνα</string>
   <!--CallScreen-->
   <string name="CallScreen_Incoming_call">Εισερχόμενη κλήση</string>
+  <!--CameraActivity-->
   <!--ClearProfileActivity-->
   <string name="ClearProfileActivity_remove">Αφαίρεση</string>
   <string name="ClearProfileActivity_remove_profile_photo">Αφαίρεση φωτογραφίας προφίλ?</string>
+  <!--CommunicationActions-->
   <!--ConfirmIdentityDialog-->
   <string name="ConfirmIdentityDialog_your_safety_number_with_s_has_changed">Ο αριθμός ασφαλείας με τον/την %1$s άλλαξε. Είτε κάποιος προσπαθεί να υποκλέψει τη συνομιλία σας, είτε ο/η %2$s απλά επανεγκατέστησε το Signal.</string>
   <string name="ConfirmIdentityDialog_you_may_wish_to_verify_your_safety_number_with_this_contact">Προτείνουμε να επιβεβαιώσεις τον αριθμό ασφαλείας σου με αυτή την επαφή.</string>
@@ -131,6 +134,7 @@
   <string name="ConversationActivity_specify_recipient">Παρακαλώ επιλέξτε μια επαφή</string>
   <string name="ConversationActivity_unblock_this_contact_question">Ξεμπλοκάρισμα αυτής της επαφής;</string>
   <string name="ConversationActivity_you_will_once_again_be_able_to_receive_messages_and_calls_from_this_contact">Θα μπορείς και πάλι να λαμβάνεις μηνύματα και κλήσεις από αυτή την επαφή.</string>
+  <string name="ConversationActivity_unblock_this_group_description">Τα υπάρχοντα μέλη θα μπορούν να σας προσθέσουν ξανά στην ομάδα.</string>
   <string name="ConversationActivity_unblock">Ξεμπλοκάρισμα</string>
   <string name="ConversationActivity_attachment_exceeds_size_limits">Το συνημμένο υπερβαίνει τα όρια μεγέθους για το είδος μηνύματος που στέλνεις.</string>
   <string name="ConversationActivity_quick_camera_unavailable">Κάμερα μη διαθέσιμη</string>
@@ -264,6 +268,7 @@
   <string name="ExperienceUpgradeActivity_ready_for_your_closeup">Είσαι έτοιμος/η για φωτογράφιση;</string>
   <string name="ExperienceUpgradeActivity_now_you_can_share_a_profile_photo_and_name_with_friends_on_signal">Τώρα μπορείς να μοιραστείς μια φωτογραφία προφίλ και ένα όνομα με τους φίλους σου στο Signal</string>
   <string name="ExperienceUpgradeActivity_signal_profiles_are_here">Ήρθαν τα προφίλ Signal</string>
+  <!--GcmBroadcastReceiver-->
   <!--GcmRefreshJob-->
   <string name="GcmRefreshJob_Permanent_Signal_communication_failure">Μόνιμη αποτυχία επικοινωνίας του Signal!</string>
   <string name="GcmRefreshJob_Signal_was_unable_to_register_with_Google_Play_Services">Το Signal δεν μπόρεσε να εγγραφτεί στις Υπηρεσίες Google Play. Τα μηνύματα και οι κλήσεις του Signal έχουν απενεργοποιηθεί. Παρακαλώ προσπάθησε να επανεγγραφτείς στις Ρυθμίσεις &gt; Προχωρημένες Ρυθμίσεις.</string>
@@ -316,6 +321,7 @@
   <string name="InviteActivity_lets_switch_to_signal">Ας χρησιμοποιήσουμε το Signal: %1$s</string>
   <string name="InviteActivity_no_app_to_share_to">Φαινεται πως δεν έχεις κάποια εφαρμογή στην οποία μπορείς να μοιραστείς.</string>
   <string name="InviteActivity_friends_dont_let_friends_text_unencrypted">Οι φίλοι δεν αφήνουν τους φίλους να συνομιλούν χωρίς κρυπτογράφηση.</string>
+  <!--Job-->
   <!--MessageDetailsRecipient-->
   <string name="MessageDetailsRecipient_failed_to_send">Αποτυχία αποστολής</string>
   <string name="MessageDetailsRecipient_new_safety_number">Νέος αριθμός ασφαλείας</string>
@@ -337,6 +343,7 @@
   <string name="MediaOverviewActivity_Media_delete_progress_title">Γίνεται διαγραφή</string>
   <string name="MediaOverviewActivity_Media_delete_progress_message">Διαγραφή μηνυμάτων...</string>
   <string name="MediaOverviewActivity_Documents">Αρχεία</string>
+  <string name="MediaOverviewActivity_Select_all">Επιλογή όλων</string>
   <!--- NotificationBarManager-->
   <string name="NotificationBarManager_signal_call_in_progress">Κλήση Signal εν εξελίξει</string>
   <string name="NotificationBarManager__establishing_signal_call">Γίνεται κλήση Signal</string>
@@ -405,6 +412,7 @@
   <string name="PassphrasePromptActivity_invalid_passphrase_exclamation">Μη έγκυρο συνθηματικό!</string>
   <!--PlayServicesProblemFragment-->
   <string name="PlayServicesProblemFragment_the_version_of_google_play_services_you_have_installed_is_not_functioning">Η έκδοση των Υπηρεσιών Google Play που έχεις εγκαταστήσει δε λειτουργεί σωστά. Παρακαλούμε επανεγκατέστησε τις Υπηρεσίες Google Play και δοκίμασε ξανά.</string>
+  <!--PushNotificationReceiveJob-->
   <!--RatingManager-->
   <string name="RatingManager_rate_this_app">Βαθμολόγησε αυτή την εφαρμογή</string>
   <string name="RatingManager_if_you_enjoy_using_this_app_please_take_a_moment">Αν σου αρέσει αυτή η εφαρμογή, βοήθησέ μας βαθμολογώντας την - δε θα σου πάρει πολύ χρόνο.</string>
@@ -415,9 +423,12 @@
   <!--RecipientPreferencesActivity-->
   <string name="RecipientPreferenceActivity_block_this_contact_question">Μπλοκάρισμα αυτής της επαφής;</string>
   <string name="RecipientPreferenceActivity_you_will_no_longer_receive_messages_and_calls_from_this_contact">Δε θα λαμβάνεις πλέον μηνύματα και κλήσεις από αυτή την επαφή.</string>
+  <string name="RecipientPreferenceActivity_block_and_leave_group_description">Δεν θα λαμβάνετε πλέον μηνύματα ή ενημερώσεις από αυτήν την ομάδα.</string>
   <string name="RecipientPreferenceActivity_block">Μπλοκάρισμα</string>
   <string name="RecipientPreferenceActivity_unblock_this_contact_question">Ξεμπλοκάρισμα αυτής της επαφής;</string>
   <string name="RecipientPreferenceActivity_you_will_once_again_be_able_to_receive_messages_and_calls_from_this_contact">Θα μπορείς και πάλι να λάβεις μηνύματα και κλήσεις από αυτή την επαφή.</string>
+  <string name="RecipientPreferenceActivity_unblock_this_group_description">Τα υπάρχοντα μέλη θα μπορούν να σας προσθέσουν ξανά στην ομάδα.</string>
+  <string name="RecipientPreferenceActivity_error_leaving_group">Πρόβλημα κατά την αποχώρηση από την ομάδα</string>
   <string name="RecipientPreferenceActivity_unblock">Ξεμπλοκάρισμα</string>
   <string name="RecipientPreferenceActivity_enabled">Ενεργοποιημένο</string>
   <string name="RecipientPreferenceActivity_disabled">Απενεργοποιημένο</string>
@@ -464,6 +475,7 @@
   <string name="SearchFragment_header_conversations">Συνομιλίες</string>
   <string name="SearchFragment_header_contacts">Επαφές</string>
   <string name="SearchFragment_header_messages">Μηνύματα</string>
+  <!--SendJob-->
   <!--SharedContactDetailsActivity-->
   <string name="SharedContactDetailsActivity_add_to_contacts">Προσθήκη στις επαφές</string>
   <string name="SharedContactDetailsActivity_invite_to_signal">Πρόσκληση στο Signal</string>
@@ -998,6 +1010,8 @@
   <string name="preferences_chats__message_text_size">Μέγεθος γραμματοσειράς μηνύματος</string>
   <string name="preferences_events__contact_joined_signal">Η επαφή εγκατέστησε το Signal</string>
   <string name="preferences_notifications__priority">Προτεραιότητα</string>
+  <string name="preferences_communication__category_sealed_sender">Προστατευμένος Αποστολέας</string>
+  <string name="preferences_communication__sealed_sender_allow_from_anyone_description">Ενεργοποιήστε τον προστατευμένο αποστολέα για εισερχόμενα μηνύματα από άτομα που δεν βρίσκονται στις επαφές σας και άτομα με τα οποία δεν έχετε μοιραστεί το προφίλ σας.</string>
   <!--****************************************-->
   <!--menus-->
   <!--****************************************-->

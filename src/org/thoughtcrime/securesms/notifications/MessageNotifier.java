@@ -51,8 +51,8 @@ import org.thoughtcrime.securesms.database.model.MessageRecord;
 import org.thoughtcrime.securesms.database.model.MmsMessageRecord;
 import org.thoughtcrime.securesms.mms.SlideDeck;
 import org.thoughtcrime.securesms.recipients.Recipient;
+import org.thoughtcrime.securesms.service.IncomingMessageObserver;
 import org.thoughtcrime.securesms.service.KeyCachingService;
-import org.thoughtcrime.securesms.service.MessageRetrievalService;
 import org.thoughtcrime.securesms.util.ServiceUtil;
 import org.thoughtcrime.securesms.util.SpanUtil;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
@@ -164,7 +164,7 @@ public class MessageNotifier {
           if (notification.getId() != SUMMARY_NOTIFICATION_ID &&
               notification.getId() != CallNotificationBuilder.WEBRTC_NOTIFICATION   &&
               notification.getId() != KeyCachingService.SERVICE_RUNNING_ID          &&
-              notification.getId() != MessageRetrievalService.FOREGROUND_ID         &&
+              notification.getId() != IncomingMessageObserver.FOREGROUND_ID         &&
               notification.getId() != PENDING_MESSAGES_ID)
           {
             for (NotificationItem item : notificationState.getNotifications()) {
@@ -531,8 +531,6 @@ public class MessageNotifier {
 
     @Override
     public void run() {
-      MessageNotifier.updateNotification(context);
-
       long delayMillis = delayUntil - System.currentTimeMillis();
       Log.i(TAG, "Waiting to notify: " + delayMillis);
 

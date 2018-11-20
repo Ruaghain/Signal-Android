@@ -115,6 +115,7 @@ public class AttachmentDownloadJob extends MasterSecretJob implements Injectable
 
     if (!manual && !AttachmentUtil.isAutoDownloadPermitted(context, attachment)) {
       Log.w(TAG, "Attachment can't be auto downloaded...");
+      database.setTransferState(messageId, attachmentId, AttachmentDatabase.TRANSFER_PROGRESS_PENDING);
       return;
     }
 
@@ -192,13 +193,14 @@ public class AttachmentDownloadJob extends MasterSecretJob implements Injectable
         Log.i(TAG, "Downloading attachment with no digest...");
       }
 
-      return new SignalServiceAttachmentPointer(id, null, key, relay,
+      return new SignalServiceAttachmentPointer(id, null, key,
                                                 Optional.of(Util.toIntExact(attachment.getSize())),
                                                 Optional.absent(),
                                                 0, 0,
                                                 Optional.fromNullable(attachment.getDigest()),
                                                 Optional.fromNullable(attachment.getFileName()),
-                                                attachment.isVoiceNote());
+                                                attachment.isVoiceNote(),
+                                                Optional.absent());
     } catch (IOException | ArithmeticException e) {
       Log.w(TAG, e);
       throw new InvalidPartException(e);
